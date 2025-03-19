@@ -1,0 +1,55 @@
+Private Sub Worksheet_Deactivate()
+    serbest
+End Sub
+
+Private Sub Worksheet_SelectionChange(ByVal Target As Range)
+    If Not Intersect(Target, Range("E:E,K:K")) Is Nothing Then
+        yasak
+    Else
+        serbest
+    End If
+End Sub
+
+'YUKARIDAKİ KODU SAYFANIN WORKSHEET SELECTİON KISMINA YAPIŞTIR. ÖRNEĞİN DENEME İSİMLİ SAYFADA E VE K SÜTUNUNUNDA KOPYALAMA YAPILMASINI ENGELLEMEK İSTİYORSAN YUKARIDAKİ KODU DENEME İSİMLİ SAYFANIN WORKSHEET SELECTİON KISMINA YAPIŞTIR.
+
+AŞAĞIDAKİ KODU İSE MODULE EKLE.ÇALIŞTIRMANA GEREK YOK. İŞLEMLERİ YAPTIKTAN SONRA EXCEL DOSYASINI KAYDET, ÇIK, YENİDEN GİR.
+
+
+Sub EnableControl(Id As Integer, Enabled As Boolean)
+    Dim CB As CommandBar
+    Dim C As CommandBarControl
+    For Each CB In Application.CommandBars
+        Set C = CB.FindControl(Id:=Id, recursive:=True)
+        If Not C Is Nothing Then C.Enabled = Enabled
+    Next
+End Sub
+Sub yasak()
+    Application.CellDragAndDrop = False
+    EnableControl 292, False
+    EnableControl 293, False
+    EnableControl 294, False
+    EnableControl 21, False   ' cut
+    EnableControl 19, False   ' copy
+    EnableControl 22, False   ' paste
+    EnableControl 755, False  ' pastespecial
+    Application.OnKey "^c", ""
+    Application.OnKey "^x", ""
+    Application.OnKey "^v", ""
+    Application.OnKey "+{DEL}", ""
+    Application.OnKey "+{INSERT}", ""
+End Sub
+Sub serbest()
+    Application.CellDragAndDrop = True
+    EnableControl 292, True
+    EnableControl 293, True
+    EnableControl 294, True
+    EnableControl 21, True   ' cut
+    EnableControl 19, True   ' copy
+    EnableControl 22, True   ' paste
+    EnableControl 755, True  ' pastespecial
+    Application.OnKey "^c"
+    Application.OnKey "^x"
+    Application.OnKey "^v"
+    Application.OnKey "+{DEL}"
+    Application.OnKey "+{INSERT}"
+End Sub
