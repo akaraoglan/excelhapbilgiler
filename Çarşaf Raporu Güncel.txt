@@ -1,0 +1,70 @@
+// === Carşaf Raporu ===
+CarsafRapor:
+Load
+    POSNR as FATURAKALEMNUMARASI,
+    FKDAT_ANA as FATURALAMATARIHI,
+    VBELN as FATURALAMABELGESI,
+    KUNRE_ANA as FATURAALICISIKODU,
+    MATNR as MALZEME_KEY,
+    ARKTX as MALZEMEKISAMETNI,
+    MATKL as MALGRUBU,
+    FKIMG as FATURALANANMIKTAR,
+    VRKME as BIRIM,
+    KZWI1 / FKIMG as BIRIMFIYAT,
+    KZWI1 as NETFIYATARATOPLAM1,
+    KZWI3 as KDVMATRAH,
+    WAERK as BELGEPARABIRIMI;
+
+SQL SELECT 
+    POSNR, 
+    FKDAT_ANA, 
+    VBELN, 
+    KUNRE_ANA, 
+    MATNR, 
+    ARKTX, 
+    MATKL, 
+    FKIMG, 
+    VRKME, 
+    KZWI1, 
+    KZWI3, 
+    WAERK 
+FROM VBRP
+WHERE VBELN = '9200019269';
+
+
+// === Malzeme Boyutları ===
+Malzeme:
+SQL SELECT 
+    MATNR, 
+    HOEHE, 
+    BREIT, 
+    LAENG 
+FROM MARA;
+
+Left Join (CarsafRapor)
+Load
+    MATNR as MALZEME_KEY, 
+    HOEHE as KALINLIK,
+    BREIT as EN,
+    LAENG as BOY
+Resident Malzeme
+Where Exists(MALZEME_KEY, MATNR);
+
+
+// === GTIP Bilgisi ===
+GTIPICIN:
+SQL SELECT
+    VBELN,
+    STAWN
+FROM /ITTR/IFT_T_R103;
+
+Left Join (CarsafRapor)
+Load
+    VBELN as FATURALAMABELGESI,
+    STAWN as GTIPNO
+Resident GTIPICIN
+Where Exists(FATURALAMABELGESI, VBELN);
+
+
+
+
