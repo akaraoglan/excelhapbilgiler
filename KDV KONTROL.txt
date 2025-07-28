@@ -1,0 +1,100 @@
+Sub KDVKontrolu()
+
+    Dim dataWS As Worksheet
+    Dim sheetWS As Worksheet
+    Dim lastRowData As Long, lastRowSheet As Long
+    Dim i As Long, j As Long
+    Dim faturaID As String
+    Dim oran As Variant
+    Dim kod As Variant
+    Dim oranlar As Object
+    Dim faturaKDVKodu As Object
+    Dim kdvKodlari As Object
+    Dim cell As Range
+    Dim eksikVar As Boolean
+    Dim fazlaKodVar As Boolean
+
+    ' Sayfaları tanımla
+    Set dataWS = Worksheets("Data")
+    Set sheetWS = Worksheets("Sheet1")
+    
+    ' Son satırları bul
+    lastRowData = dataWS.Cells(dataWS.Rows.Count, "H").End(xlUp).Row
+    lastRowSheet = sheetWS.Cells(sheetWS.Rows.Count, "J").End(xlUp).Row
+    
+    ' Oran-Kod eşleşmesi
+    Set oranlar = CreateObject("Scripting.Dictionary")
+    oranlar.Add 20, "V5"
+    oranlar.Add 0, "V0"
+    oranlar.Add 10, "V4"
+    oranlar.Add 1, "V1"
+    
+    ' Her fatura ID'yi kontrol et
+    For i = 2 To lastRowData
+        faturaID = dataWS.Cells(i, "H").Value
+        
+        ' Aynı fatura için eşsiz KDV oranlarına göre kodları topla
+        Set kdvKodlari = CreateObject("Scripting.Dictionary")
+        On Error Resume Next
+        For Each cell In dataWS.Range("H2:H" & lastRowData)
+            If cell.Value = faturaID Then
+                oran = dataWS.Cells(cell.Row, "CJ").Value
+                If oranlar.exists(oran) Then
+                    kod = oranlar(oran)
+                    If Not kdvKodlari.exists(kod) Then
+                        kdvKodlari.Add kod, True
+                    End If
+                End If
+            End If
+        Next cell
+        On Error GoTo 0
+        
+        ' Sheet1'deki KDV kodlarını topla
+        Set faturaKDVKodu = CreateObject("Scripting.Dictionary")
+        For j = 2 To lastRowSheet
+            If sheetWS.Cells(j, "J").Value = faturaID Then
+                kod = sheetWS.Cells(j, "F").Value
+                If Not faturaKDVKodu.exists(kod) Then
+                    faturaKDVKodu.Add kod, True
+                End If
+            End If
+        Next j
+        
+        ' Kontrol başlasın
+        eksikVar = False
+        fazlaKodVar = False
+        
+        ' Gerekli KDV kodlarından biri bile eksikse: hata
+        For Each kod In kdvKodlari.Keys
+            If Not faturaKDVKodu.exists(kod) Then
+                eksikVar = True
+                Exit For
+            End If
+        Next kod
+
+        ' Eğer sadece 1 oran varsa, başka kod varsa hata!
+        If kdvKodlari.Count = 1 Then
+            For Each kod In faturaKDVKodu.Keys
+                If Not kdvKodlari.exists(kod) Then
+                    fazlaKodVar = True
+                    Exit For
+                End If
+            Next kod
+        End If
+        
+        ' Renkleme işlemi
+        For Each cell In dataWS.Range("H2:H" & lastRowData)
+            If cell.Value = faturaID Then
+                If eksikVar Or fazlaKodVar Then
+                    cell.Interior.Color = RGB(255, 0, 0) ' Kırmızı
+                Else
+                    cell.Interior.Color = RGB(144, 238, 144) ' Yeşil
+                End If
+            End If
+        Next cell
+
+    Next i
+
+    MsgBox "KDV kontrolü tamamlandı.", vbInformation
+
+End Sub
